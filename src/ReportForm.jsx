@@ -1,51 +1,127 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'toasticom';
-import { User, Briefcase, Phone, Upload, AlertTriangle, MapPin, FileText, Image as ImageIcon, CheckCircle, X, Loader2 } from 'lucide-react';
-
-// Modal Component
-function Modal({ isOpen, onClose, title, children, icon: Icon }) {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            {Icon && <Icon className="w-6 h-6 text-blue-600" />}
-            <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-}
+import { User, Briefcase, Phone, Upload, AlertTriangle, MapPin, FileText, Image as ImageIcon, CheckCircle, X, Loader2, List } from 'lucide-react';
+import { FaMapMarkerAlt } from "react-icons/fa"; // location icon
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 
 // Configuration Data
-const CITIES = [
-    'Select City',
-    'Lahore', 'Faisalabad', 'Rawalpindi', 'Multan', 'Gujranwala', 'Sialkot',
-    'Sargodha', 'Bahawalpur', 'Gujrat', 'Sahiwal', 'Jhang', 'Sheikhupura', 'Jhelum',
-    'Okara', 'Kasur', 'Rahim Yar Khan', 'Dera Ghazi Khan', 'Mandi Bahauddin',
-    'Hafizabad', 'Toba Tek Singh', 'Khanewal', 'Chiniot', 'Burewala',
-    'Karachi', 'Hyderabad', 'Sukkur', 'Larkana', 'Nawabshah (Benazirabad)',
-    'Mirpur Khas', 'Jacobabad',
-    'Peshawar', 'Mardan', 'Mingora (Swat)', 'Kohat', 'Abbottabad', 'Swabi',
-    'Dera Ismail Khan', 'Haripur',
-    'Quetta', 'Gwadar', 'Turbat', 'Khuzdar', 'Chaman',
-    'Islamabad', 'Muzaffarabad (AJK)', 'Gilgit (GB)',
-    'Other / Village Name (Please Specify Below)',
-];
-const OTHER_CITY_OPTION = CITIES[CITIES.length - 1];
+const OTHER_CITY_OPTION = "Other / Village Name (Please Specify Below)";
+
+const PROVINCES = {
+  "Azad Kashmir": [
+    "Athmuqam",
+    "Bagh",
+    "Kotli",
+    "Muzaffarabad",
+    "New Mirpur",
+    "Rawala Kot",
+    OTHER_CITY_OPTION
+  ],
+  Balochistan: [
+    "Awaran",
+    "Barkhan",
+    "Chaman",
+    "Dalbandin",
+    "Dera Allahyar",
+    "Dera Bugti",
+    "Dera Murad Jamali",
+    "Gandava",
+    "Gwadar",
+    "Kalat",
+    "Kharan",
+    "Khuzdar",
+    "Kohlu",
+    "Loralai",
+    "Mastung",
+    "Musa Khel Bazar",
+    "Panjgur",
+    "Pishin",
+    "Quetta",
+    "Qila Saifullah",
+    "Sibi",
+    "Turbat",
+    "Uthal",
+    "Zhob",
+    "Ziarat",
+    OTHER_CITY_OPTION
+  ],
+  "Gilgit-Baltistan": [
+    "Aliabad",
+    "Chilas",
+    "Dainyor",
+    "Eidgah",
+    "Gakuch",
+    "Gilgit",
+    OTHER_CITY_OPTION
+  ],
+  "Khyber Pakhtunkhwa": [
+    "Abbottabad",
+    "Alpurai",
+    "Bannu",
+    "Batgram",
+    "Charsadda",
+    "Chitral",
+    "Dera Ismail Khan",
+    "Hangu",
+    "Haripur",
+    "Karak",
+    "Kohat",
+    "Kulachi",
+    "Malakand",
+    "Mansehra",
+    "Mardan",
+    "Mingaora",
+    "Nowshera",
+    "Parachinar",
+    "Peshawar",
+    "Risalpur Cantonment",
+    "Saidu Sharif",
+    "Swabi",
+    "Tank",
+    "Timargara",
+    OTHER_CITY_OPTION
+  ],
+  Punjab: [
+    "Bahawalpur",
+    "Burewala",
+    "Chiniot",
+    "Dera Ghazi Khan",
+    "Faisalabad",
+    "Gujranwala",
+    "Gujrat",
+    "Hafizabad",
+    "Jhang",
+    "Kasur",
+    "Khanewal",
+    "Lahore",
+    "Mandi Bahauddin",
+    "Multan",
+    "Okara",
+    "Rahim Yar Khan",
+    "Rawalpindi",
+    "Sahiwal",
+    "Sargodha",
+    "Sheikhupura",
+    "Sialkot",
+    "Toba Tek Singh",
+    OTHER_CITY_OPTION
+  ],
+  Sindh: [
+    "Hyderabad",
+    "Jacobabad",
+    "Karachi",
+    "Larkana",
+    "Mirpur Khas",
+    "Nawabshah",
+    "Sukkur",
+    OTHER_CITY_OPTION
+  ],
+  Other: [OTHER_CITY_OPTION],
+  "Select Province": [] // usually shown at top in dropdown
+};
+
 
 const BUYER_TYPES = [
     'Select Buyer Type',
@@ -61,6 +137,33 @@ const getLabelWithUrdu = (enLabel, urduLabel) => (
         {enLabel} <span className="font-normal text-sm text-gray-500">(<span className="font-medium">{urduLabel}</span>)</span>
     </>
 );
+
+// Modal Component
+function Modal({ isOpen, onClose, title, children, icon: Icon }) {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <div className="flex items-center gap-3">
+                        {Icon && <Icon className="w-6 h-6 text-blue-600" />}
+                        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+                <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
+}
 
 // Custom Input Field Component
 const InputField = ({ label, name, type = 'text', value, onChange, required = false, placeholder, helpText = null, maxLength = null, icon: Icon }) => (
@@ -111,7 +214,8 @@ export default function ReportForm() {
         personName: '',
         fraudMobile: '',
         fraudBusinessName: '',
-        fraudCity: CITIES[0],
+        fraudProvince: Object.keys(PROVINCES)[0], // 'Select Province'
+        fraudCity: '',
         cninNumber: '',
         customCity: '',
         moreDetails: '',
@@ -129,6 +233,17 @@ export default function ReportForm() {
 
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    // Effect to clear city selection when province changes
+    useEffect(() => {
+        if (form.fraudProvince !== form.fraudCity) { // Prevent unnecessary updates
+            setForm(prevForm => ({ 
+                ...prevForm, 
+                fraudCity: '', 
+                customCity: '' 
+            }));
+        }
+    }, [form.fraudProvince]);
 
     function handleChange(e) {
         const { name, value, files } = e.target;
@@ -148,12 +263,19 @@ export default function ReportForm() {
                 finalValue = value.replace(/\D/g, '');
             }
 
-            setForm({ ...form, [name]: finalValue });
-        }
-    }
+            // Handle Province change and reset city
+            if (name === 'fraudProvince') {
+                setForm(prevForm => ({ 
+                    ...prevForm, 
+                    [name]: finalValue, 
+                    fraudCity: '', 
+                    customCity: '' 
+                }));
+                return;
+            }
 
-    function handleCustomCityChange(e) {
-        setForm({ ...form, customCity: e.target.value });
+            setForm(prevForm => ({ ...prevForm, [name]: finalValue }));
+        }
     }
 
     async function handleSubmit(e) {
@@ -164,33 +286,40 @@ export default function ReportForm() {
         const finalCity = isOtherSelected ? form.customCity : form.fraudCity;
 
         // Validation with Toasts
-        if (finalCity === CITIES[0] || finalCity.trim() === '') {
-            toast('error', 'Please select a valid City or enter a custom location.');
+        if (form.fraudProvince === Object.keys(PROVINCES)[0]) {
+            toast.error('Please select a Province.');
             setLoading(false);
             return;
         }
+
+        if (form.fraudCity === '' || (isOtherSelected && form.customCity.trim() === '')) {
+            toast.error('Please select a valid City or enter a custom location.');
+            setLoading(false);
+            return;
+        }
+
         if (form.fraudType.trim() === '') {
-            toast('error', 'Please enter the type of fraud.');
+            toast.error('Please enter the type of fraud.');
             setLoading(false);
             return;
         }
         if (form.buyerType === BUYER_TYPES[0]) {
-            toast('error', 'Please select a Buyer Type.');
+            toast.error('Please select a Buyer Type.');
             setLoading(false);
             return;
         }
         if (form.reporterMobile.length !== 11) {
-            toast('error', 'Your Mobile Number must be exactly 11 digits.');
+            toast.error('Your Mobile Number must be exactly 11 digits.');
             setLoading(false);
             return;
         }
         if (form.fraudMobile.length !== 11) {
-            toast('error', 'Fraud Mobile Number must be exactly 11 digits.');
+            toast.error('Fraud Mobile Number must be exactly 11 digits.');
             setLoading(false);
             return;
         }
         if (form.cninNumber.length !== 13) {
-            toast('error', 'CNIC Number must be exactly 13 digits (without dashes).');
+            toast.error('CNIC Number must be exactly 13 digits (without dashes).');
             setLoading(false);
             return;
         }
@@ -205,8 +334,8 @@ export default function ReportForm() {
             formData.append("personName", form.personName);
             formData.append("fraudMobile", form.fraudMobile);
             formData.append("fraudBusinessName", form.fraudBusinessName);
-            formData.append("fraudCity", finalCity);
-            formData.append("customCity", form.customCity);
+            formData.append("fraudProvince", form.fraudProvince);
+            formData.append("fraudCity", finalCity); // Use the resolved finalCity
             formData.append("cninNumber", form.cninNumber);
             formData.append("moreDetails", form.moreDetails);
 
@@ -215,14 +344,15 @@ export default function ReportForm() {
             if (form.manPic) formData.append("manPic", form.manPic);
             if (form.otherPic) formData.append("otherPic", form.otherPic);
 
+            // NOTE: Replace with your actual endpoint
             await axios.post("http://localhost:5000/api/reports", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
-            toast('success', 'Report submitted successfully!');
+            toast.success('Report submitted successfully!');
             setShowSuccessModal(true);
 
-            // Cleanup
+            // Cleanup Previews
             Object.values(previews).forEach(url => url && URL.revokeObjectURL(url));
             setPreviews({
                 reporterVisitingCard: null,
@@ -230,23 +360,28 @@ export default function ReportForm() {
                 manPic: null,
                 otherPic: null
             });
+
+            // Reset Form State
             setForm({
                 reporterName: '', reporterBusiness: '', reporterMobile: '',
                 reporterVisitingCard: null,
                 fraudType: '', buyerType: BUYER_TYPES[0], personName: '',
                 fraudMobile: '',
                 fraudBusinessName: '',
-                fraudCity: CITIES[0], cninNumber: '', customCity: '', moreDetails: '',
+                fraudProvince: Object.keys(PROVINCES)[0], // Reset to 'Select Province'
+                fraudCity: '', cninNumber: '', customCity: '', moreDetails: '',
                 shopPic: null, manPic: null, otherPic: null,
             });
 
         } catch (err) {
             console.error("❌ Error submitting report:", err);
-            toast('error', 'Error submitting report. Please check your network and try again.');
+            toast.error('Error submitting report. Please check your network and try again.');
         } finally {
             setLoading(false);
         }
     }
+
+    const currentProvinceCities = PROVINCES[form.fraudProvince] || [];
 
     return (
         <>
@@ -258,7 +393,7 @@ export default function ReportForm() {
                         <h1 className="text-3xl font-bold text-gray-900">Fraud Report Form</h1>
                     </div>
                     <p className="text-gray-600">
-                        دھوکہ دہی کی رپورٹ فارم - Please provide accurate details. All required fields are marked with <span className="text-red-500">*</span>
+                        دھوکہ دہی کی رپورٹ   <span className="text-red-500">*</span>
                     </p>
                 </div>
 
@@ -266,47 +401,46 @@ export default function ReportForm() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div className="flex items-center gap-2 mb-6 pb-3 border-b border-gray-200">
                         <User className="w-6 h-6 text-blue-600" />
-                        <h2 className="text-xl font-bold text-gray-900">1. Your Details (Reporter) - آپ کی تفصیلات</h2>
+                        <h2 className="text-xl font-bold text-gray-900">1. Reporter Details -رپورٹ کرنے والے کی تفصیلات</h2>
                     </div>
-                    
-                    <InputField 
-                        label={getLabelWithUrdu("Your Full Name", "آپ کا پورا نام")} 
-                        name="reporterName" 
-                        value={form.reporterName} 
-                        onChange={handleChange} 
-                        required={true} 
-                        placeholder="e.g., Jane Doe"
+
+                    <InputField
+                        label={getLabelWithUrdu("Full Name", "  پورا نام")}
+                        name="reporterName"
+                        value={form.reporterName}
+                        onChange={handleChange}
+                        required={true}
+                        placeholder="e.g., Abdul Shakoor"
                         icon={User}
                     />
-                    
-                    <InputField 
-                        label={getLabelWithUrdu("Business Name (Optional)", "کاروبار کا نام (اختیاری)")} 
-                        name="reporterBusiness" 
-                        value={form.reporterBusiness} 
-                        onChange={handleChange} 
-                        placeholder="Your company or business name"
+
+                    <InputField
+                        label={getLabelWithUrdu("Business Name", "کاروبار کا نام ")}
+                        name="reporterBusiness"
+                        value={form.reporterBusiness}
+                        onChange={handleChange}
+                        placeholder=""
                         icon={Briefcase}
                     />
-                    
+
                     <InputField
-                        label={getLabelWithUrdu("Mobile Number (11 Digits)", "موبائل نمبر (11 ہندسوں کا)")}
+                        label={getLabelWithUrdu("Mobile Number", "موبائل نمبر ")}
                         name="reporterMobile"
                         type="tel"
                         value={form.reporterMobile}
                         onChange={handleChange}
                         required={true}
                         placeholder="e.g., 03XXXXXXXXX"
-                        helpText="Used only for follow-up verification. (صرف تصدیق کے لیے استعمال ہوگا)"
                         maxLength={11}
                         icon={Phone}
                     />
-                    
+
                     {/* Visiting Card Upload */}
                     <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
                         <label className="block text-sm font-semibold text-gray-700 mb-3">
                             <div className="flex items-center gap-2">
                                 <Upload className="w-5 h-5 text-blue-600" />
-                                {getLabelWithUrdu('Visiting Card (Optional)', 'کارڈ (اختیاری)')}
+                                {getLabelWithUrdu('Visiting Card', 'بزنس کارڈ  ')}
                             </div>
                         </label>
                         <input
@@ -344,47 +478,72 @@ export default function ReportForm() {
                         <label htmlFor="buyerType" className="block text-sm font-semibold text-gray-700 mb-2">
                             {getLabelWithUrdu("Buyer Type", "خریدار کی قسم")} <span className="text-red-500">*</span>
                         </label>
-                        <select 
-                            id="buyerType" 
-                            name="buyerType" 
-                            value={form.buyerType} 
-                            onChange={handleChange} 
-                            required 
+                        <select
+                            id="buyerType"
+                            name="buyerType"
+                            value={form.buyerType}
+                            onChange={handleChange}
+                            required
                             className="block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                         >
                             {BUYER_TYPES.map(type => (<option key={type} value={type} disabled={type === BUYER_TYPES[0]}>{type}</option>))}
                         </select>
                     </div>
 
-                    <InputField 
-                        label={getLabelWithUrdu("Type of Fraud", "دھوکہ دہی کی قسم")} 
-                        name="fraudType" 
-                        value={form.fraudType} 
-                        onChange={handleChange} 
-                        required={true} 
-                        placeholder="e.g., Counterfeit Electronics, Rental Scam" 
+                    {/* <InputField
+                        label={getLabelWithUrdu("Type of Fraud", "دھوکہ دہی کی قسم")}
+                        name="fraudType"
+                        value={form.fraudType}
+                        onChange={handleChange}
+                        required={true}
+                        placeholder="e.g., Counterfeit Electronics, Rental Scam, Payment Fraud"
                         helpText="Describe the nature of the fraud clearly. (دھوکہ دہی کی نوعیت واضح طور پر بیان کریں)"
-                    />
+                        icon={List}
+                    /> */}
 
-                    {/* City Dropdown */}
+                    {/* Province Dropdown */}
                     <div className="mb-4">
-                        <label htmlFor="fraudCity" className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label htmlFor="fraudProvince" className="block text-sm font-semibold text-gray-700 mb-2">
                             <div className="flex items-center gap-2">
                                 <MapPin className="w-4 h-4" />
-                                {getLabelWithUrdu("City or Major Town of Incident", "واقعہ کا شہر یا بڑا قصبہ")} <span className="text-red-500">*</span>
+                                {getLabelWithUrdu("Province/Region", "صوبہ/علاقہ")} <span className="text-red-500">*</span>
                             </div>
                         </label>
-                        <select 
-                            id="fraudCity" 
-                            name="fraudCity" 
-                            value={form.fraudCity} 
-                            onChange={handleChange} 
-                            required 
-                            className="block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        <select
+                            id="fraudProvince"
+                            name="fraudProvince"
+                            value={form.fraudProvince}
+                            onChange={handleChange}
+                            required
+                            className="block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                            {CITIES.map(city => (<option key={city} value={city} disabled={city === CITIES[0]}>{city}</option>))}
+                            {Object.keys(PROVINCES).map(province => (
+                                <option key={province} value={province} disabled={province === Object.keys(PROVINCES)[0]}>{province}</option>
+                            ))}
                         </select>
                     </div>
+
+                    {/* City Dropdown (dependent on province) */}
+                    {form.fraudProvince && form.fraudProvince !== Object.keys(PROVINCES)[0] && (
+                        <div className="mb-4">
+                            <label htmlFor="fraudCity" className="block text-sm font-semibold text-gray-700 mb-2">
+                                {getLabelWithUrdu("City or Major Town", "شہر یا بڑا قصبہ")} <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                id="fraudCity"
+                                name="fraudCity"
+                                value={form.fraudCity}
+                                onChange={handleChange}
+                                required
+                                className="block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Select City</option>
+                                {currentProvinceCities.map(city => (
+                                    <option key={city} value={city}>{city}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     {/* Custom City Input */}
                     {form.fraudCity === OTHER_CITY_OPTION && (
@@ -392,28 +551,28 @@ export default function ReportForm() {
                             <label htmlFor="customCity" className="block text-sm font-semibold text-gray-700 mb-2">
                                 {getLabelWithUrdu("Custom Location Name", "اپنی مرضی کا مقام")} <span className="text-red-500">*</span>
                             </label>
-                            <input 
-                                id="customCity" 
-                                type="text" 
-                                name="customCity" 
-                                value={form.customCity} 
-                                onChange={handleCustomCityChange} 
-                                placeholder="e.g., Kacha Khuh, or a specific village name" 
-                                required 
+                            <input
+                                id="customCity"
+                                type="text"
+                                name="customCity"
+                                value={form.customCity}
+                                onChange={handleChange}
+                                placeholder="e.g., Kacha Khuh, or a specific village name"
+                                required
                                 className="block w-full px-3 py-2 border border-yellow-400 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition bg-white"
                             />
                             <p className="mt-2 text-xs text-gray-600">Please enter the specific town or village name here. (براہ کرم یہاں مخصوص قصبے یا گاؤں کا نام درج کریں)</p>
                         </div>
                     )}
 
-                    <InputField 
-                        label={getLabelWithUrdu("Fraud Person's Name", "دھوکہ دینے والے شخص کا نام")} 
-                        name="personName" 
-                        value={form.personName} 
-                        onChange={handleChange} 
-                        required={true} 
-                        placeholder="e.g., John Smith (or 'Unknown')" 
-                        helpText="The name of the individual involved. (شامل شخص کا نام)"
+                    <InputField
+                        label={getLabelWithUrdu("Fraud Person's Name", "دھوکہ دینے والے شخص کا نام")}
+                        name="personName"
+                        value={form.personName}
+                        onChange={handleChange}
+                        required={true}
+                        placeholder="e.g., John Smith (or 'Unknown')"
+                        // helpText="The name of the individual involved. (شامل شخص کا نام)"
                         icon={User}
                     />
 
@@ -430,7 +589,7 @@ export default function ReportForm() {
                         icon={Phone}
                     />
 
-                    <InputField 
+                    <InputField
                         label={getLabelWithUrdu("CNIC Number (13 Digits)", "قومی شناختی کارڈ نمبر (13 ہندسوں کا)")}
                         name="cninNumber"
                         type="text"
@@ -443,71 +602,121 @@ export default function ReportForm() {
                         icon={FileText}
                     />
 
-                    <InputField 
-                        label={getLabelWithUrdu("Fraud Business/Organization Name", "دھوکہ دہی والے کاروبار کا نام")} 
-                        name="fraudBusinessName" 
-                        value={form.fraudBusinessName} 
-                        onChange={handleChange} 
+                    <InputField
+                        label={getLabelWithUrdu("Fraud Business ", "دھوکہ دہی والے کاروبار کا نام")}
+                        name="fraudBusinessName"
+                        value={form.fraudBusinessName}
+                        onChange={handleChange}
                         placeholder="The name of the fraudulent company/shop."
                         icon={Briefcase}
                     />
 
-                    <InputField 
-                        label={getLabelWithUrdu("Detailed Description", "تفصیلی وضاحت")} 
-                        name="moreDetails" 
-                        type="textarea" 
-                        value={form.moreDetails} 
-                        onChange={handleChange} 
-                        placeholder="Explain what happened, including dates and amounts." 
-                        required={true} 
-                        helpText="Be as detailed as possible. (جتنی ممکن ہو تفصیلات سے آگاہ کریں)" 
+                    <InputField
+                        label={getLabelWithUrdu("Detailed Description", "تفصیلی وضاحت")}
+                        name="moreDetails"
+                        type="textarea"
+                        value={form.moreDetails}
+                        onChange={handleChange}
+                        placeholder="Explain what happened, including dates and amounts."
+                        required={true}
+                        helpText="Be as detailed as possible. (جتنی ممکن ہو تفصیلات سے آگاہ کریں)"
                     />
                 </div>
 
-                {/* Evidence Section */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center gap-2 mb-6 pb-3 border-b border-gray-200">
-                        <ImageIcon className="w-6 h-6 text-blue-600" />
-                        <h2 className="text-xl font-bold text-gray-900">3. Evidence (Images) - ثبوت (تصاویر)</h2>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">
-                        Please upload any pictures you have (Max 1 file per type). (براہ کرم کوئی بھی تصویر اپ لوڈ کریں)
-                    </p>
+               
 
-                    {['shopPic', 'manPic', 'otherPic'].map((name) => (
-                        <div key={name} className="mb-4 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                <div className="flex items-center gap-2">
-                                    <Upload className="w-5 h-5 text-blue-600" />
-                                    {name === 'shopPic' ? getLabelWithUrdu('Photo of Shop/Location', 'دکان/جگہ کی تصویر') :
-                                        name === 'manPic' ? getLabelWithUrdu("Photo of Person (If Available)", "شخص کی تصویر (اگر دستیاب ہو)") :
-                                            getLabelWithUrdu('Other Evidence Photo', 'دیگر ثبوت کی تصویر')}
-                                </div>
-                            </label>
-                            <input
-                                type="file"
-                                name={name}
-                                accept="image/*"
-                                onChange={handleChange}
-                                className="text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-                            />
+{/* Evidence Section */}
+<div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-6 pb-3 border-b border-gray-200">
+        <ImageIcon className="w-6 h-6 text-blue-600" />
+        <h2 className="text-xl font-bold text-gray-900">
+          3. Evidence (Images) - ثبوت (تصاویر)
+        </h2>
+      </div>
 
-                            {previews[name] && (
-                                <div className="mt-4 p-3 bg-white rounded-lg border border-green-300">
-                                    <p className="text-xs font-semibold text-green-700 mb-2 flex items-center gap-1">
-                                        <CheckCircle className="w-4 h-4" />
-                                        Image Preview (تصویر کا پیش نظارہ)
-                                    </p>
-                                    <img
-                                        src={previews[name]}
-                                        alt={`${name} Preview`}
-                                        className="h-32 w-32 object-cover rounded-lg shadow-sm"
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+      {/* Instructions */}
+      <p className="text-sm text-gray-600 mb-4">
+        Please upload any pictures you have (Max 1 file per type).
+        <br />
+        (براہ کرم کوئی بھی تصویر اپ لوڈ کریں)
+      </p>
+
+      {/* Upload Fields */}
+      {["shopPic", "manPic", "otherPic"].map((name) => (
+        <div
+          key={name}
+          className="mb-4 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+        >
+          {/* Label */}
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <div className="flex items-center gap-2">
+              <Upload className="w-5 h-5 text-blue-600" />
+              {name === "shopPic"
+                ? getLabelWithUrdu("Photo of Shop/Location", "دکان/جگہ کی تصویر")
+                : name === "manPic"
+                ? getLabelWithUrdu("Photo of Person (If Available)", "شخص کی تصویر (اگر دستیاب ہو)")
+                : getLabelWithUrdu("Other Evidence Photo", "دیگر ثبوت کی تصویر")}
+            </div>
+          </label>
+
+          {/* File Input */}
+          <input
+            type="file"
+            name={name}
+            accept="image/*"
+            onChange={handleChange}
+            className="text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 
+                       file:rounded-lg file:border-0 file:text-sm file:font-semibold 
+                       file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+          />
+
+          {/* Preview */}
+          {previews[name] && (
+            <div className="mt-4 p-3 bg-white rounded-lg border border-green-300">
+              <p className="text-xs font-semibold text-green-700 mb-2 flex items-center gap-1">
+                <CheckCircle className="w-4 h-4" />
+                Image Preview (تصویر کا پیش نظارہ)
+              </p>
+              <img
+                src={previews[name]}
+                alt={`${name} Preview`}
+                className="h-32 w-32 object-cover rounded-lg shadow-sm"
+              />
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Note */}
+      <div className="p-3 mt-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-md shadow-sm">
+    <p className="text-sm text-gray-800 font-medium">
+        **نوٹ:** اگر آپ یہاں تصاویر اپ لوڈ نہیں کر سکتے، تو براہ کرم اپنی رپورٹ جمع کرانے کے بعد ثبوت 
+        <span className="font-extrabold text-green-700 hover:text-green-800 transition-colors whitespace-nowrap">
+            **فوری طور پر واٹس ایپ**
+        </span> 
+        کریں: 
+       {/* Floating WhatsApp Button */}
+<a
+  href="https://wa.me/923006623362"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="fixed bottom-6 right-6 flex items-center justify-center 
+             w-20 h-20 bg-green-600 text-white rounded-full shadow-lg 
+             hover:bg-green-700 transition-all z-50"
+>
+  <FontAwesomeIcon icon={faWhatsapp} size='4x' className=" text-white" />
+</a>
+
+
+    </p>
+   
+
+</div>
+
+      
+     
+    </div>
 
                 {/* Submit Button */}
                 <button
