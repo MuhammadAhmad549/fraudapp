@@ -7,7 +7,7 @@ import AdminPanel from "./AdminPanel";
 import FraudList from "./FraudList";
 import FraudDetails from "./FraudDetails";
 import UpdateReport from "./UpdateForm";
-import { ToastProvider, toast } from "toasticom";
+import { ToastProvider, toast } from "toasticon";
 import "./index.css";
 
 function AppContent() {
