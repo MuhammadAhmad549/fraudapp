@@ -1,101 +1,146 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "toasticom";
+import { Shield, Mail, Lock, Loader2, LogIn } from "lucide-react";
+import axios from "axios";
 
 export default function AdminLogin() {
-  // Add state for the username
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // NOTE: In a real application, you would use a secure backend API call here,
-  // NOT a hardcoded username/password like this.
+  useEffect(() => {
+    // Redirect if already logged in
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/admin/panel");
+    }
+  }, [navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
-      const res = await axios.get("http://localhost:5000/api/auth/login", {
-        username,
+      const res = await axios.post("http://localhost:5000/api/admin/login", {
+        email,
         password,
       });
 
-      // Save token + user info
+      // Store authentication data
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.setItem("admin", JSON.stringify(res.data.admin));
 
-      navigate("/admin/panel"); // go to admin panel
+      toast("success", "Login successful! Welcome back.");
+      navigate("/admin/panel");
     } catch (err) {
-      setError("Invalid username or password");
+      // Handle errors with toast notifications
+      if (err.response?.status === 401) {
+        toast("error", "Invalid email or password. Please try again.");
+      } else if (err.response?.status === 500) {
+        toast("error", "Server error. Please try again later.");
+      } else {
+        toast("error", "Login failed. Please check your connection.");
+      }
+      console.error("Login error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-6">
-          {/* Using a simple icon for visual appeal */}
-          <span className="text-5xl text-indigo-600">🔑</span> 
-          <h1 className="text-3xl font-extrabold text-gray-900 mt-2">
+    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] px-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+            <Shield className="w-8 h-8 text-blue-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Admin Access
           </h1>
-          <p className="text-sm text-gray-500">Sign in to manage reports</p>
+          <p className="text-gray-600">Sign in to manage fraud reports</p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-8 rounded-lg shadow-xl border border-gray-100"
-        >
-          {/* New Username Section */}
-          <div className="mb-4">
-            <label 
-              htmlFor="username" 
-              className="block text-sm font-medium text-gray-700 mb-1"
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 space-y-6">
+          {/* Email Field */}
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-semibold text-gray-700 mb-2"
             >
-                Administrator Username
+              Administrator Email
             </label>
-            <input
-              id="username"
-              type="text"
-              placeholder="Enter your username"
-              value={username}
-              // Update state on change
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-lg transition duration-150"
-              required
-            />
-          </div>
-
-          {/* Existing Password Section */}
-          <div className="mb-6">
-            <label 
-              htmlFor="password" 
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-                Security Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-lg transition duration-150"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md mb-4 text-sm">
-                {error}
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                id="email"
+                type="email"
+                placeholder="admin@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                required
+                disabled={loading}
+              />
             </div>
-          )}
+          </div>
 
+          {/* Password Field */}
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-semibold text-gray-700 mb-2"
+            >
+              Security Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                required
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
+            disabled={loading}
+            className={`w-full flex items-center justify-center gap-2 font-semibold py-3 rounded-lg shadow-sm transition duration-200 ${loading
+              ? 'bg-blue-400 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md'
+              }`}
           >
-            Authenticate & Login
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Authenticating...
+              </>
+            ) : (
+              <>
+                <LogIn className="w-5 h-5" />
+                Authenticate & Login
+              </>
+            )}
           </button>
         </form>
+
+        {/* Security Note */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-gray-500">
+            <Lock className="w-3 h-3 inline mr-1" />
+            Secure admin authentication required
+          </p>
+        </div>
       </div>
     </div>
   );
