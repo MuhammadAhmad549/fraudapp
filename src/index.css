@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+
+/* Add this globally or to specific container */
+.noselect {
+    user-select: none;
+    /* prevent text selection */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.nocopy img {
+    pointer-events: none;
+    /* prevent image dragging */
+}

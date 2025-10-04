@@ -9,6 +9,7 @@ const path = require('path');
 const authRoutes = require('./routes/authroutes');
 const reportRoutes = require('./routes/ReportRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const otpRoutes = require('./routes/otpRoutes');
 const { syncSuperAdmin } = require('./models/admin');
 
 const app = express();
@@ -33,6 +34,7 @@ const SUPER_ADMIN_CREDS = {
 app.use('/api/auth', authRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/otp', otpRoutes);
 
 // Connect to MongoDB & start server
 const PORT = process.env.PORT || 5000;

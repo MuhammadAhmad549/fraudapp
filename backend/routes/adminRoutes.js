@@ -29,7 +29,7 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign(
             { id: admin._id, username: admin.username, role: 'admin' },
             JWT_SECRET,
-            { expiresIn: '1h' } // Adjust as needed
+            { expiresIn: '7d' } // Adjust as needed
         );
 
         // Exclude password from response

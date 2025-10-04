@@ -1,23 +1,77 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
-import { ShieldAlert, Home, Shield, List, Menu, X } from "lucide-react";
+import { ShieldAlert, Home, Shield, List, Menu, X, Key } from "lucide-react";
 import ReportForm from "./ReportForm";
 import AdminLogin from "./AdminLogin";
 import AdminPanel from "./AdminPanel";
 import FraudList from "./FraudList";
 import FraudDetails from "./FraudDetails";
 import UpdateReport from "./UpdateForm";
-import { ToastProvider, toast } from "toasticon";
+import { ToastProvider, toast } from "toasticom";
 import "./index.css";
+import ManageOtp from "./ManageOtp";
 
 function AppContent() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hasUserToken, setHasUserToken] = useState(false); // New state for token check
 
-  const navItems = [
+  useEffect(() => {
+    const handleContextMenu = (e) => e.preventDefault();
+    document.addEventListener("contextmenu", handleContextMenu);
+    return () => document.removeEventListener("contextmenu", handleContextMenu);
+  }, []);
+
+
+  useEffect(() => {
+    const handleCopy = (e) => e.preventDefault();
+    document.addEventListener("copy", handleCopy);
+    return () => document.removeEventListener("copy", handleCopy);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (
+        (e.ctrlKey && ["c", "s", "p"].includes(e.key.toLowerCase())) ||
+        e.key === "PrintScreen"
+      ) {
+        e.preventDefault();
+        toast("error", "Keyboard shortcuts are disabled.");
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        document.body.style.filter = "blur(10px)";
+      } else {
+        document.body.style.filter = "none";
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
+
+
+
+  // Check for user token on mount and whenever needed
+  useEffect(() => {
+    const token = localStorage.getItem('token'); // Assuming key is 'userToken' (adjust if different)
+    setHasUserToken(!!token);
+  }, []);
+
+  const baseNavItems = [
     { to: "/", label: "Report", icon: Home },
     { to: "/admin", label: "Admin", icon: Shield },
     { to: "/fraudlist", label: "Fraud List", icon: List }
+  ];
+
+  const navItems = [
+    ...baseNavItems,
+    // ...(hasUserToken ? [{ to: "/otp", label: "OTP", icon: Key }] : [])
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -96,6 +150,8 @@ function AppContent() {
             <Route path="/fraudlist" element={<FraudList />} />
             <Route path="/fraudlist/:id" element={<FraudDetails />} />
             <Route path="/update-report/:id" element={<UpdateReport />} />
+            {/* New OTP Route - Add your OTP component here */}
+            <Route path="/otp" element={<ManageOtp />} /> {/* Replace OtpComponent with actual component */}
           </Routes>
         </div>
       </main>
@@ -111,6 +167,7 @@ function AppContent() {
     </div>
   );
 }
+
 
 export default function App() {
   return (

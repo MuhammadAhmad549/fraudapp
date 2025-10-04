@@ -7,21 +7,45 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 
-const CITIES = [
-    'Select City',
-    'Lahore', 'Faisalabad', 'Rawalpindi', 'Multan', 'Gujranwala', 'Sialkot',
-    'Sargodha', 'Bahawalpur', 'Gujrat', 'Sahiwal', 'Jhang', 'Sheikhupura', 'Jhelum',
-    'Okara', 'Kasur', 'Rahim Yar Khan', 'Dera Ghazi Khan', 'Mandi Bahauddin',
-    'Hafizabad', 'Toba Tek Singh', 'Khanewal', 'Chiniot', 'Burewala',
-    'Karachi', 'Hyderabad', 'Sukkur', 'Larkana', 'Nawabshah (Benazirabad)',
-    'Mirpur Khas', 'Jacobabad',
-    'Peshawar', 'Mardan', 'Mingora (Swat)', 'Kohat', 'Abbottabad', 'Swabi',
-    'Dera Ismail Khan', 'Haripur',
-    'Quetta', 'Gwadar', 'Turbat', 'Khuzdar', 'Chaman',
-    'Islamabad', 'Muzaffarabad (AJK)', 'Gilgit (GB)',
-    'Other / Village Name (Please Specify Below)',
-];
-const OTHER_CITY_OPTION = CITIES[CITIES.length - 1];
+const OTHER_CITY_OPTION = "Other / Village Name (Please Specify Below)";
+
+const PROVINCES = {
+    "Select Province": [],
+    "Azad Kashmir": [
+        "Athmuqam", "Bagh", "Kotli", "Muzaffarabad", "New Mirpur",
+        "Rawala Kot", OTHER_CITY_OPTION
+    ],
+    Balochistan: [
+        "Awaran", "Barkhan", "Chaman", "Dalbandin", "Dera Allahyar",
+        "Dera Bugti", "Dera Murad Jamali", "Gandava", "Gwadar", "Kalat",
+        "Kharan", "Khuzdar", "Kohlu", "Loralai", "Mastung", "Musa Khel Bazar",
+        "Panjgur", "Pishin", "Quetta", "Qila Saifullah", "Sibi", "Turbat",
+        "Uthal", "Zhob", "Ziarat", OTHER_CITY_OPTION
+    ],
+    "Gilgit-Baltistan": [
+        "Aliabad", "Chilas", "Dainyor", "Eidgah", "Gakuch", "Gilgit",
+        OTHER_CITY_OPTION
+    ],
+    "Khyber Pakhtunkhwa": [
+        "Abbottabad", "Alpurai", "Bannu", "Batgram", "Charsadda", "Chitral",
+        "Dera Ismail Khan", "Hangu", "Haripur", "Karak", "Kohat", "Kulachi",
+        "Malakand", "Mansehra", "Mardan", "Mingaora", "Nowshera", "Parachinar",
+        "Peshawar", "Risalpur Cantonment", "Saidu Sharif", "Swabi", "Tank",
+        "Timargara", OTHER_CITY_OPTION
+    ],
+    Punjab: [
+        "Bahawalpur", "Burewala", "Chiniot", "Dera Ghazi Khan", "Faisalabad",
+        "Gujranwala", "Gujrat", "Hafizabad", "Jhang", "Kasur", "Khanewal",
+        "Lahore", "Mandi Bahauddin", "Multan", "Okara", "Rahim Yar Khan",
+        "Rawalpindi", "Sahiwal", "Sargodha", "Sheikhupura", "Sialkot",
+        "Toba Tek Singh", OTHER_CITY_OPTION
+    ],
+    Sindh: [
+        "Hyderabad", "Jacobabad", "Karachi", "Larkana", "Mirpur Khas",
+        "Nawabshah", "Sukkur", OTHER_CITY_OPTION
+    ],
+    Other: [OTHER_CITY_OPTION]
+};
 
 const BUYER_TYPES = [
     'Select Buyer Type',
@@ -84,13 +108,15 @@ export default function UpdateReport() {
         reporterName: '',
         reporterBusiness: '',
         reporterMobile: '',
-        fraudType: '',
         buyerType: BUYER_TYPES[0],
         personName: '',
-        fraudMobile: '',
+        fraudMobile1: '',
+        fraudMobile2: '',
+        fraudMobile3: '',
         fraudBusinessName: '',
-        fraudCity: CITIES[0],
-        cninNumber: '',
+        fraudProvince: Object.keys(PROVINCES)[0],
+        fraudCity: '',
+        cnicNumber: '',
         customCity: '',
         moreDetails: '',
         status: 'new',
@@ -108,6 +134,16 @@ export default function UpdateReport() {
     });
 
     const [isUpdating, setIsUpdating] = useState(false);
+
+    // Clear city when province changes
+    useEffect(() => {
+        if (report) return; // Don't clear on initial load
+        setForm(prevForm => ({
+            ...prevForm,
+            fraudCity: '',
+            customCity: ''
+        }));
+    }, [form.fraudProvince, report]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -128,13 +164,15 @@ export default function UpdateReport() {
                     reporterName: data.reporterName || '',
                     reporterBusiness: data.reporterBusiness || '',
                     reporterMobile: data.reporterMobile || '',
-                    fraudType: data.fraudType || '',
                     buyerType: data.buyerType || BUYER_TYPES[0],
                     personName: data.personName || '',
-                    fraudMobile: data.fraudMobile || '',
+                    fraudMobile1: data.fraudMobile1 || '',
+                    fraudMobile2: data.fraudMobile2 || '',
+                    fraudMobile3: data.fraudMobile3 || '',
                     fraudBusinessName: data.fraudBusinessName || '',
-                    fraudCity: data.fraudCity || CITIES[0],
-                    cninNumber: data.cninNumber || '',
+                    fraudProvince: data.fraudProvince || Object.keys(PROVINCES)[0],
+                    fraudCity: data.fraudCity || '',
+                    cnicNumber: data.cnicNumber || '',
                     customCity: data.customCity || '',
                     moreDetails: data.moreDetails || '',
                     status: data.status || 'new',
@@ -174,19 +212,21 @@ export default function UpdateReport() {
             }
         } else {
             let finalValue = value;
-            if (name === 'cninNumber' || name === 'reporterMobile' || name === 'fraudMobile') {
+            if (
+                name === 'cnicNumber' ||
+                name === 'reporterMobile' ||
+                name === 'fraudMobile1' ||
+                name === 'fraudMobile2' ||
+                name === 'fraudMobile3'
+            ) {
                 finalValue = value.replace(/\D/g, '');
             }
-            setForm({ ...form, [name]: finalValue });
+            setForm(prev => ({ ...prev, [name]: finalValue }));
         }
     };
 
-    const handleCustomCityChange = (e) => {
-        setForm({ ...form, customCity: e.target.value });
-    };
-
     const handleStatusChange = (e) => {
-        setForm({ ...form, status: e.target.value });
+        setForm(prev => ({ ...prev, status: e.target.value }));
     };
 
     const handleSubmit = async (e) => {
@@ -196,23 +236,44 @@ export default function UpdateReport() {
         const isOtherSelected = form.fraudCity === OTHER_CITY_OPTION;
         const finalCity = isOtherSelected ? form.customCity : form.fraudCity;
 
-        // Validation with Toasts
-        if (finalCity === CITIES[0] || finalCity.trim() === '') {
+        // Validation
+        if (form.fraudProvince === Object.keys(PROVINCES)[0]) {
+            toast('error', 'Please select a Province.');
+            setIsUpdating(false);
+            return;
+        }
+
+        if (form.fraudCity === '' || (isOtherSelected && form.customCity.trim() === '')) {
             toast('error', 'Please select a valid City or enter a custom location.');
             setIsUpdating(false);
             return;
         }
+
         if (form.reporterMobile.length !== 11) {
             toast('error', 'Reporter Mobile Number must be exactly 11 digits.');
             setIsUpdating(false);
             return;
         }
-        if (form.fraudMobile.length !== 11) {
-            toast('error', 'Fraud Mobile Number must be exactly 11 digits.');
+
+        if (form.fraudMobile1.length !== 11) {
+            toast('error', 'Primary Fraud Mobile Number must be exactly 11 digits.');
             setIsUpdating(false);
             return;
         }
-        if (form.cninNumber.length !== 13) {
+
+        if (form.fraudMobile2 && form.fraudMobile2.length !== 11) {
+            toast('error', 'Secondary Fraud Mobile Number must be exactly 11 digits.');
+            setIsUpdating(false);
+            return;
+        }
+
+        if (form.fraudMobile3 && form.fraudMobile3.length !== 11) {
+            toast('error', 'Third Fraud Mobile Number must be exactly 11 digits.');
+            setIsUpdating(false);
+            return;
+        }
+
+        if (form.cnicNumber.length !== 13) {
             toast('error', 'CNIC Number must be exactly 13 digits.');
             setIsUpdating(false);
             return;
@@ -223,14 +284,16 @@ export default function UpdateReport() {
             formData.append('reporterName', form.reporterName);
             formData.append('reporterBusiness', form.reporterBusiness);
             formData.append('reporterMobile', form.reporterMobile);
-            formData.append('fraudType', form.fraudType);
             formData.append('buyerType', form.buyerType);
             formData.append('personName', form.personName);
-            formData.append('fraudMobile', form.fraudMobile);
+            formData.append('fraudMobile1', form.fraudMobile1);
+            if (form.fraudMobile2) formData.append('fraudMobile2', form.fraudMobile2);
+            if (form.fraudMobile3) formData.append('fraudMobile3', form.fraudMobile3);
             formData.append('fraudBusinessName', form.fraudBusinessName);
+            formData.append('fraudProvince', form.fraudProvince);
             formData.append('fraudCity', finalCity);
             formData.append('customCity', form.customCity);
-            formData.append('cninNumber', form.cninNumber);
+            formData.append('cnicNumber', form.cnicNumber);
             formData.append('moreDetails', form.moreDetails);
             formData.append('status', form.status);
 
@@ -279,8 +342,10 @@ export default function UpdateReport() {
         );
     }
 
+    const currentProvinceCities = PROVINCES[form.fraudProvince] || [];
+
     return (
-        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-6">
+        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-6 p-4">
             {/* Header */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <button
@@ -306,33 +371,29 @@ export default function UpdateReport() {
                 </div>
 
                 <InputField
-                    label={getLabelWithUrdu("Your Full Name", "آپ کا پورا نام")}
+                    label={getLabelWithUrdu("Full Name", "پورا نام")}
                     name="reporterName"
                     value={form.reporterName}
                     onChange={handleChange}
                     required
-                    placeholder="e.g., Jane Doe"
                     icon={User}
                 />
 
                 <InputField
-                    label={getLabelWithUrdu("Business Name (Optional)", "کاروبار کا نام (اختیاری)")}
+                    label={getLabelWithUrdu("Business Name", "کاروبار کا نام")}
                     name="reporterBusiness"
                     value={form.reporterBusiness}
                     onChange={handleChange}
-                    placeholder="Your company or business name"
                     icon={Briefcase}
                 />
 
                 <InputField
-                    label={getLabelWithUrdu("Mobile Number (11 Digits)", "موبائل نمبر (11 ہندسوں کا)")}
+                    label={getLabelWithUrdu("Mobile Number", "موبائل نمبر")}
                     name="reporterMobile"
                     type="tel"
                     value={form.reporterMobile}
                     onChange={handleChange}
                     required
-                    placeholder="e.g., 03XXXXXXXXX"
-                    helpText="Used only for follow-up verification."
                     maxLength={11}
                     icon={Phone}
                 />
@@ -342,7 +403,7 @@ export default function UpdateReport() {
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
                         <div className="flex items-center gap-2">
                             <Upload className="w-5 h-5 text-blue-600" />
-                            {getLabelWithUrdu('Visiting Card (Optional)', 'کارڈ (اختیاری)')}
+                            {getLabelWithUrdu('Visiting Card', 'بزنس کارڈ')}
                         </div>
                     </label>
                     <input
@@ -392,45 +453,65 @@ export default function UpdateReport() {
                     </select>
                 </div>
 
-                <InputField
-                    label={getLabelWithUrdu("Type of Fraud", "دھوکہ دہی کی قسم")}
-                    name="fraudType"
-                    value={form.fraudType}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g., Counterfeit Electronics"
-                />
-
-                {/* City Dropdown */}
+                {/* Province Dropdown */}
                 <div className="mb-4">
-                    <label htmlFor="fraudCity" className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor="fraudProvince" className="block text-sm font-semibold text-gray-700 mb-2">
                         <div className="flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
-                            {getLabelWithUrdu("City or Major Town", "واقعہ کا شہر یا بڑا قصبہ")} <span className="text-red-500">*</span>
+                            {getLabelWithUrdu("Province/Region", "صوبہ/علاقہ")} <span className="text-red-500">*</span>
                         </div>
                     </label>
                     <select
-                        id="fraudCity"
-                        name="fraudCity"
-                        value={form.fraudCity}
+                        id="fraudProvince"
+                        name="fraudProvince"
+                        value={form.fraudProvince}
                         onChange={handleChange}
                         required
-                        className="block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        className="block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                        {CITIES.map(city => (<option key={city} value={city}>{city}</option>))}
+                        {Object.keys(PROVINCES).map(province => (
+                            <option key={province} value={province} disabled={province === Object.keys(PROVINCES)[0]}>{province}</option>
+                        ))}
                     </select>
                 </div>
+
+                {/* City Dropdown */}
+                {form.fraudProvince && form.fraudProvince !== Object.keys(PROVINCES)[0] && (
+                    <div className="mb-4">
+                        <label htmlFor="fraudCity" className="block text-sm font-semibold text-gray-700 mb-2">
+                            {getLabelWithUrdu("City or Major Town", "شہر یا بڑا قصبہ")} <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            id="fraudCity"
+                            name="fraudCity"
+                            value={form.fraudCity}
+                            onChange={handleChange}
+                            required
+                            className="block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">Select City</option>
+                            {currentProvinceCities.map(city => (
+                                <option key={city} value={city}>{city}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
 
                 {/* Custom City */}
                 {form.fraudCity === OTHER_CITY_OPTION && (
                     <div className="mb-4 p-4 border-2 border-dashed border-yellow-300 rounded-lg bg-yellow-50">
-                        <InputField
-                            label={getLabelWithUrdu("Custom Location Name", "اپنی مرضی کا مقام")}
+                        <label htmlFor="customCity" className="block text-sm font-semibold text-gray-700 mb-2">
+                            {getLabelWithUrdu("Custom Location Name", "اپنی مرضی کا مقام")} <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            id="customCity"
+                            type="text"
                             name="customCity"
                             value={form.customCity}
-                            onChange={handleCustomCityChange}
-                            required
+                            onChange={handleChange}
                             placeholder="e.g., Kacha Khuh"
+                            required
+                            className="block w-full px-3 py-2 border border-yellow-400 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition bg-white"
                         />
                     </div>
                 )}
@@ -441,40 +522,56 @@ export default function UpdateReport() {
                     value={form.personName}
                     onChange={handleChange}
                     required
-                    placeholder="e.g., John Smith"
                     icon={User}
                 />
 
                 <InputField
-                    label={getLabelWithUrdu("Fraud Mobile Number (11 Digits)", "دھوکہ باز کا موبائل نمبر")}
-                    name="fraudMobile"
+                    label={getLabelWithUrdu("Fraud Mobile Number 1", "دھوکہ باز کا موبائل نمبر 1")}
+                    name="fraudMobile1"
                     type="tel"
-                    value={form.fraudMobile}
+                    value={form.fraudMobile1}
                     onChange={handleChange}
                     required
-                    placeholder="e.g., 03XXXXXXXXX"
+                    maxLength={11}
+                    icon={Phone}
+                />
+
+                <InputField
+                    label={getLabelWithUrdu("Fraud Mobile Number 2", "دھوکہ باز کا موبائل نمبر 2")}
+                    name="fraudMobile2"
+                    type="tel"
+                    value={form.fraudMobile2}
+                    onChange={handleChange}
+                    maxLength={11}
+                    icon={Phone}
+                />
+
+                <InputField
+                    label={getLabelWithUrdu("Fraud Mobile Number 3", "دھوکہ باز کا موبائل نمبر 3")}
+                    name="fraudMobile3"
+                    type="tel"
+                    value={form.fraudMobile3}
+                    onChange={handleChange}
                     maxLength={11}
                     icon={Phone}
                 />
 
                 <InputField
                     label={getLabelWithUrdu("CNIC Number (13 Digits)", "قومی شناختی کارڈ نمبر")}
-                    name="cninNumber"
+                    name="cnicNumber"
                     type="text"
-                    value={form.cninNumber}
+                    value={form.cnicNumber}
                     onChange={handleChange}
                     required
-                    placeholder="e.g., 4210198765432"
                     maxLength={13}
                     icon={FileText}
                 />
 
                 <InputField
-                    label={getLabelWithUrdu("Fraud Business Name", "دھوکہ دہی والے کاروبار کا نام")}
+                    label={getLabelWithUrdu("Fraud Business", "دھوکہ دہی والے کاروبار کا نام")}
                     name="fraudBusinessName"
                     value={form.fraudBusinessName}
                     onChange={handleChange}
-                    placeholder="The name of the fraudulent company/shop."
                     icon={Briefcase}
                 />
 
@@ -485,7 +582,6 @@ export default function UpdateReport() {
                     value={form.moreDetails}
                     onChange={handleChange}
                     required
-                    placeholder="Explain what happened..."
                 />
 
                 {/* Status Select */}

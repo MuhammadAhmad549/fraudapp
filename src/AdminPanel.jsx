@@ -4,7 +4,9 @@ import { toast } from 'toasticom';
 import {
   Shield, Search, Filter, LogOut, Home, Edit, Trash2, Loader2,
   User, Phone, Briefcase, MapPin, AlertTriangle, Calendar,
-  ChevronLeft, ChevronRight, X, FileText, Image as ImageIcon
+  ChevronLeft, ChevronRight, X, FileText, Image as ImageIcon,
+  Eye,
+  Key
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -230,6 +232,13 @@ export default function AdminPanel() {
             </div>
             <div className="flex items-center gap-2">
               <Link
+                to="/otp"
+                className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition"
+              >
+                <Key className="w-4 h-4" />
+                Manage OTP
+              </Link>
+              <Link
                 to="/"
                 className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition"
               >
@@ -361,6 +370,13 @@ export default function AdminPanel() {
 
                   {/* Actions */}
                   <div className="flex flex-col gap-2">
+                    <Link
+                      to={`/fraudlist/${r._id}`}
+                      className="flex items-center justify-center gap-2 w-full py-2 px-4 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                    >
+                      <Eye className="w-4 h-4" />
+                      View Report
+                    </Link>
                     <Link
                       to={`/update-report/${r._id}`}
                       className="flex items-center justify-center gap-2 w-full py-2 px-4 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
